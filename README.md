@@ -55,6 +55,33 @@ Then point your node_exporter at the directory:
 node_exporter --collector.textfile.directory=/shared/metrics
 ```
 
+## Grafana dashboard
+
+A ready-to-import dashboard ships with the plugin:
+[`grafana/nf-prometheus-dashboard.json`](grafana/nf-prometheus-dashboard.json).
+
+- Run status, duration and task counters at a glance
+- Per-process **scheduler queue wait** (the number your login-node `squeue`
+  never aggregates for you), wall time, CPUs requested and peak RSS
+- Task progress over time and a table of recent runs
+- A `run` variable to switch between runs
+
+Import it via *Dashboards → New → Import* (or provision it from a file),
+with a Prometheus datasource that scrapes your node_exporter or
+Pushgateway. When scraping a Pushgateway, set `honor_labels: true` so the
+`run_name` label is preserved.
+
+To see it working locally without a cluster, the repo includes a full dev
+stack (single-node Slurm + node-exporter + Pushgateway + Prometheus +
+provisioned Grafana):
+
+```bash
+make assemble
+cd dev/slurm && docker compose up -d --build
+docker compose exec slurm nextflow run main.nf -c ../dev/slurm/slurm-test.config
+# then open http://localhost:3000/d/nf-prometheus
+```
+
 ## Development
 
 ```bash
