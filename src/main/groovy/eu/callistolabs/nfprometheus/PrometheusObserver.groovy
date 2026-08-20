@@ -54,6 +54,16 @@ class PrometheusObserver implements TraceObserver {
 
     MetricsRegistry getRegistry() { registry }
 
+    /**
+     * Ask Nextflow to collect per-task resource metrics (peak RSS, CPU usage).
+     * Without this, {@code peak_rss} and friends are absent from the trace
+     * record and the corresponding gauges stay empty.
+     */
+    @Override
+    boolean enableMetrics() {
+        return true
+    }
+
     @Override
     void onFlowCreate(Session session) {
         this.session = session

@@ -8,4 +8,4 @@ build
 work
 
 # Validation run artifacts
-validation/nf-prometheus.prom
+validation/*.prom

@@ -33,3 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit tests (Spock) and end-to-end validation pipeline
 - CI: GitHub Actions matrix over Java 17/21 and Nextflow 25.10/26.04 with
   unit tests, e2e validation run and metrics file assertion
+
+## [0.1.1] - Unreleased
+
+### Added
+- Grafana dashboard (`grafana/nf-prometheus-dashboard.json`) with run status
+  tiles, per-process queue wait / wall time / CPU / peak RSS, task progress
+  and a runs table; `run` template variable
+- Dev monitoring stack: node-exporter (textfile collector), Prometheus and
+  auto-provisioned Grafana alongside the Slurm test container
+
+### Fixed
+- `enableMetrics()` now returns `true`, so Nextflow collects per-task
+  resource metrics; without it `nf_task_peak_rss_bytes_max` was always empty

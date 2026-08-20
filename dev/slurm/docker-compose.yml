@@ -9,3 +9,30 @@ services:
       - ../..:/workspace
     working_dir: /workspace/validation
     command: ["sleep", "infinity"]
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    command:
+      - '--collector.textfile.directory=/metrics'
+    volumes:
+      # the validation pipeline writes its .prom file here
+      - ../../validation:/metrics:ro
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_BASIC_ENABLED=false
+    volumes:
+      - ./grafana-provisioning:/etc/grafana/provisioning:ro
+      - ../../grafana:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
