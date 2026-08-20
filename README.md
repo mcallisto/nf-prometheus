@@ -9,6 +9,11 @@ often runs on a compute node behind a firewall, unreachable by your Prometheus
 server. The primary export mode therefore requires **no network connectivity at
 all**.
 
+![nf-prometheus Grafana dashboard: run status, per-process queue wait, wall time, CPUs and peak RSS](docs/img/dashboard.png)
+
+*A demo run on the bundled Slurm test cluster — including a genuine 28-minute
+queue stall on FASTQC that the dashboard surfaces at a glance.*
+
 ## Export modes
 
 | Mode | Status | How it works |

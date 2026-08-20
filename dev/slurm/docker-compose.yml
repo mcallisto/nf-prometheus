@@ -36,8 +36,14 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_BASIC_ENABLED=false
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
     volumes:
       - ./grafana-provisioning:/etc/grafana/provisioning:ro
       - ../../grafana:/var/lib/grafana/dashboards:ro
     ports:
       - "3000:3000"
+
+  # headless PNG rendering (dashboard screenshots)
+  renderer:
+    image: grafana/grafana-image-renderer:3.11.1

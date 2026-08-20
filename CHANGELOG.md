@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still change shape — covered by the CI matrix
 
 ### Fixed
+- Dashboard queries deduplicate series with `max without (instance, job)`:
+  when two export modes are active at once (e.g. textfile + Pushgateway),
+  every metric arrived through two scrape paths and all panels double-counted
 - `enableMetrics()` now returns `true`, so Nextflow collects per-task
   resource metrics; without it `nf_task_peak_rss_bytes_max` was always empty
 
