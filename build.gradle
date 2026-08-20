@@ -1,0 +1,15 @@
+plugins {
+    id 'io.nextflow.nextflow-plugin' version '1.0.0-beta.15'
+}
+
+version = '0.1.0'
+
+nextflowPlugin {
+    nextflowVersion = '25.10.0'
+
+    provider = 'Mario Callisto'
+    className = 'eu.callistolabs.nfprometheus.PrometheusPlugin'
+    extensionPoints = [
+        'eu.callistolabs.nfprometheus.PrometheusFactory'
+    ]
+}

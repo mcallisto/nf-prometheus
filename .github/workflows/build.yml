@@ -1,0 +1,61 @@
+name: nf-prometheus CI
+on:
+  push:
+    branches:
+      - '*'
+    tags-ignore:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  build:
+    name: Build nf-prometheus
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        java_version: [17, 21]
+        nextflow_version: ['25.10', '26.04']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Java ${{ matrix.java_version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java_version }}
+          distribution: 'temurin'
+
+      - name: Unit tests
+        run: make test
+        env:
+          GRADLE_OPTS: '-Dorg.gradle.daemon=false'
+
+      - name: Setup Nextflow ${{ matrix.nextflow_version }}
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: "${{ matrix.nextflow_version }}"
+
+      - name: Install plugin locally
+        run: make install
+        env:
+          GRADLE_OPTS: '-Dorg.gradle.daemon=false'
+
+      - name: End-to-end validation
+        working-directory: validation
+        run: nextflow run main.nf
+
+      - name: Check metrics file
+        working-directory: validation
+        run: |
+          test -s nf-prometheus.prom || { echo "metrics file missing or empty"; exit 1; }
+          grep -q 'nf_workflow_status{run_name=' nf-prometheus.prom
+          grep -q 'nf_tasks_total{' nf-prometheus.prom
+          echo "--- nf-prometheus.prom ---"
+          cat nf-prometheus.prom
