@@ -15,7 +15,7 @@ all**.
 |---|---|---|
 | **Textfile collector** | ✅ available | Writes a `.prom` file (atomic rename) for the [node_exporter textfile collector](https://github.com/prometheus/node_exporter#textfile-collector) — typically on a shared filesystem. Works air-gapped. |
 | **Pushgateway** | ✅ available | PUT to your [Prometheus Pushgateway](https://github.com/prometheus/pushgateway) on the group `job/<pushJob>/run_name/<run>`: live updates during the run (throttled to 5s), atomic replace per run, batch-job lifecycle handled by the gateway. Scrape it with `honor_labels: true`. |
-| HTTP `/metrics` | 🚧 planned | Classic scrape endpoint on the head job |
+| **HTTP `/metrics`** | ✅ available | Classic scrape endpoint served by the head job for the duration of the run (`httpPort`). For head jobs on nodes reachable by your Prometheus server. |
 
 ## Metrics (v0.1)
 
@@ -43,6 +43,9 @@ prometheus {
     // optional: also push to a Prometheus Pushgateway (live updates)
     pushgateway = 'http://pushgateway.example.org:9091'
     pushJob = 'nextflow'   // grouping-key job name (default)
+
+    // optional: serve /metrics over HTTP for the duration of the run
+    httpPort = 9200
 }
 ```
 

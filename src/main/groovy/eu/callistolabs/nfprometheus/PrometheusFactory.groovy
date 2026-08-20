@@ -17,21 +17,21 @@ package eu.callistolabs.nfprometheus
 
 import groovy.transform.CompileStatic
 import nextflow.Session
-import nextflow.trace.TraceObserver
-import nextflow.trace.TraceObserverFactory
+import nextflow.trace.TraceObserverV2
+import nextflow.trace.TraceObserverFactoryV2
 
 /**
  * Creates the {@link PrometheusObserver} when the plugin is enabled.
  */
 @CompileStatic
-class PrometheusFactory implements TraceObserverFactory {
+class PrometheusFactory implements TraceObserverFactoryV2 {
 
     @Override
-    Collection<TraceObserver> create(Session session) {
+    Collection<TraceObserverV2> create(Session session) {
         final opts = session.config?.get('prometheus') as Map
         final config = new PrometheusConfig(opts)
         if( !config.enabled )
-            return List.<TraceObserver>of()
-        return List.<TraceObserver>of(new PrometheusObserver(config))
+            return List.<TraceObserverV2>of()
+        return List.<TraceObserverV2>of(new PrometheusObserver(config))
     }
 }

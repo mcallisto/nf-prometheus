@@ -23,9 +23,9 @@ import java.nio.file.StandardCopyOption
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import nextflow.Session
-import nextflow.processor.TaskHandler
-import nextflow.trace.TraceObserver
+import nextflow.trace.TraceObserverV2
 import nextflow.trace.TraceRecord
+import nextflow.trace.event.TaskEvent
 
 /**
  * Collects workflow/task events and writes them as Prometheus metrics
@@ -38,7 +38,7 @@ import nextflow.trace.TraceRecord
  */
 @Slf4j
 @CompileStatic
-class PrometheusObserver implements TraceObserver {
+class PrometheusObserver implements TraceObserverV2 {
 
     private final PrometheusConfig config
     private final MetricsRegistry registry = new MetricsRegistry()
@@ -53,6 +53,7 @@ class PrometheusObserver implements TraceObserver {
 
     private PushgatewayClient pusher
     private long lastPushMillis
+    private MetricsHttpServer httpServer
 
     PrometheusObserver(PrometheusConfig config) {
         this.config = config
@@ -77,6 +78,8 @@ class PrometheusObserver implements TraceObserver {
         this.startMillis = System.currentTimeMillis()
         if( config.pushgateway )
             this.pusher = new PushgatewayClient(config.pushgateway, config.pushJob, runName)
+        if( config.httpPort != null )
+            this.httpServer = MetricsHttpServer.tryStart(config.httpPort, { registry.render() } as java.util.function.Supplier<String>)
 
         registry.describe('nf_workflow_info', 'gauge', 'Workflow run information (always 1)')
         registry.describe('nf_workflow_status', 'gauge', 'Workflow status: 0=running 1=complete 2=error')
@@ -93,13 +96,14 @@ class PrometheusObserver implements TraceObserver {
     }
 
     @Override
-    void onProcessSubmit(TaskHandler handler, TraceRecord trace) {
-        registry.inc('nf_tasks_total', [run_name: runName, process: processOf(trace), status: 'submitted'])
+    void onTaskSubmit(TaskEvent event) {
+        registry.inc('nf_tasks_total', [run_name: runName, process: processOf(event.trace), status: 'submitted'])
         write()
     }
 
     @Override
-    void onProcessComplete(TaskHandler handler, TraceRecord trace) {
+    void onTaskComplete(TaskEvent event) {
+        final trace = event.trace
         final process = processOf(trace)
         final status = (trace.get('status') as String ?: 'COMPLETED').toLowerCase()
         registry.inc('nf_tasks_total', [run_name: runName, process: process, status: status])
@@ -125,13 +129,13 @@ class PrometheusObserver implements TraceObserver {
     }
 
     @Override
-    void onProcessCached(TaskHandler handler, TraceRecord trace) {
-        registry.inc('nf_tasks_total', [run_name: runName, process: processOf(trace), status: 'cached'])
+    void onTaskCached(TaskEvent event) {
+        registry.inc('nf_tasks_total', [run_name: runName, process: processOf(event.trace), status: 'cached'])
         write()
     }
 
     @Override
-    void onFlowError(TaskHandler handler, TraceRecord trace) {
+    void onFlowError(TaskEvent event) {
         errored = true
         registry.set('nf_workflow_status', [run_name: runName], 2d)
         write(true)
@@ -144,6 +148,7 @@ class PrometheusObserver implements TraceObserver {
             registry.set('nf_workflow_status', [run_name: runName], 1d)
         registry.set('nf_workflow_duration_seconds', [run_name: runName], (System.currentTimeMillis() - startMillis) / 1000d)
         write(true)
+        httpServer?.stop()
         log.debug "nf-prometheus: metrics written to ${outputPath()}"
     }
 

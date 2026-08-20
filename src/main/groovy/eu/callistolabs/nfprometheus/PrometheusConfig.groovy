@@ -57,6 +57,10 @@ class PrometheusConfig implements ConfigScope {
     @Description('Job name used in the Pushgateway grouping key (default: `nextflow`).')
     String pushJob
 
+    @ConfigOption
+    @Description('TCP port for a `/metrics` HTTP endpoint served by the head job for the duration of the run (classic scrape mode; use `0` for an ephemeral port). Unset by default (disabled).')
+    Integer httpPort
+
     /* no-arg constructor required by the extension point system for config schema discovery */
     PrometheusConfig() {}
 
@@ -66,6 +70,7 @@ class PrometheusConfig implements ConfigScope {
         this.path = opts.get('path') as String ?: 'nf-prometheus.prom'
         this.pushgateway = opts.get('pushgateway') as String
         this.pushJob = opts.get('pushJob') as String ?: 'nextflow'
+        this.httpPort = opts.get('httpPort') as Integer
     }
 
     boolean isEnabled() {
