@@ -11,8 +11,34 @@ all**.
 
 ![nf-prometheus Grafana dashboard: run status, per-process queue wait, wall time, CPUs and peak RSS](docs/img/dashboard.png)
 
-*A demo run on the bundled Slurm test cluster — including a genuine 28-minute
-queue stall on FASTQC that the dashboard surfaces at a glance.*
+*A demo run on the bundled Slurm test cluster. ALIGN_BWA's 2.3-minute
+average queue wait is real: its 2-CPU tasks queue behind each other on the
+4-CPU node — exactly the kind of contention this dashboard exists to show.*
+
+## Need and solution
+
+If you run Nextflow on a shared on-premise cluster, your observability
+options in 2026 are narrower than they look: the hosted platform's free
+tier is sized for individual use, self-hosting it is an enterprise license
+conversation, the open-source nf-tower was archived in January 2025, and
+`-with-weblog` hands you raw JSON events and an exercise for the reader.
+Meanwhile the questions that actually cost you time stay unanswered while
+the run is going: **how long are my tasks sitting in the queue, per
+process? Which process requests 32 GB and peaks at 4? Is the run stuck or
+just slow?**
+
+Almost every HPC site already operates a Prometheus + Grafana stack for
+node health. nf-prometheus is the missing bridge between Nextflow's head
+job and that stack — built for the constraint that makes generic exporters
+fail on HPC: the head job is itself a batch job, often on a compute node
+your Prometheus server cannot reach, sometimes on a cluster with no
+outbound network at all. Hence textfile-first export (a shared filesystem
+is the one interface every node has), with Pushgateway and HTTP modes
+where the network allows. Zero dependencies beyond the JDK, and metrics
+can never fail your pipeline.
+
+The longer story, with real incidents from the test cluster:
+[*Where did my task go? Monitoring Nextflow on Slurm without Tower*](https://www.callistolabs.eu/blog/monitoring-nextflow-on-slurm-without-tower/).
 
 ## Export modes
 
