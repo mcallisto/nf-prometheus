@@ -10,6 +10,7 @@ nextflowPlugin {
     provider = 'Mario Callisto'
     className = 'eu.callistolabs.nfprometheus.PrometheusPlugin'
     extensionPoints = [
-        'eu.callistolabs.nfprometheus.PrometheusFactory'
+        'eu.callistolabs.nfprometheus.PrometheusFactory',
+        'eu.callistolabs.nfprometheus.PrometheusConfig'
     ]
 }

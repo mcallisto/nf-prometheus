@@ -16,6 +16,10 @@
 package eu.callistolabs.nfprometheus
 
 import groovy.transform.CompileStatic
+import nextflow.config.spec.ConfigOption
+import nextflow.config.spec.ConfigScope
+import nextflow.config.spec.ScopeName
+import nextflow.script.dsl.Description
 
 /**
  * Configuration for the nf-prometheus plugin, read from the
@@ -27,19 +31,38 @@ import groovy.transform.CompileStatic
  *     path    = 'nf-prometheus.prom'   // textfile-collector output
  * }
  * </pre>
+ *
+ * Registered as a {@link ConfigScope} extension point so that Nextflow
+ * recognizes the {@code prometheus} block (no "unrecognized config
+ * option" warnings; config validation and documentation support).
  */
+@ScopeName('prometheus')
+@Description('The `prometheus` scope allows you to configure the `nf-prometheus` plugin.')
 @CompileStatic
-class PrometheusConfig {
+class PrometheusConfig implements ConfigScope {
 
-    /** Master switch; the plugin is active when it is loaded, unless disabled. */
-    final boolean enabled
+    @ConfigOption
+    @Description('Enable or disable the nf-prometheus observer (default: `true`).')
+    Boolean enabled
 
-    /** Output path of the metrics file (node_exporter textfile collector format). */
-    final String path
+    @ConfigOption
+    @Description('Path of the metrics file written in the node_exporter textfile-collector format (default: `nf-prometheus.prom`, relative to the launch directory).')
+    String path
+
+    /* no-arg constructor required by the extension point system for config schema discovery */
+    PrometheusConfig() {}
 
     PrometheusConfig(Map opts) {
         opts = opts ?: Collections.emptyMap()
         this.enabled = opts.get('enabled') == null ? true : opts.get('enabled') as boolean
         this.path = opts.get('path') as String ?: 'nf-prometheus.prom'
+    }
+
+    boolean isEnabled() {
+        return enabled == null ? true : enabled
+    }
+
+    String getPath() {
+        return path ?: 'nf-prometheus.prom'
     }
 }
