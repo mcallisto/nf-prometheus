@@ -8,10 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Config scope registration for the `prometheus` block (planned; currently
-  emits a harmless "Unrecognized config option" warning)
 - HTTP `/metrics` scrape endpoint (planned)
-- Pushgateway export mode (planned)
 
 ## [0.1.0] - Unreleased
 
@@ -37,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - Unreleased
 
 ### Added
+- Pushgateway export mode: `prometheus.pushgateway` (base URL) and
+  `prometheus.pushJob` options; PUT of the full payload on the group
+  `job/<pushJob>/run_name/<run>` — live updates during the run (throttled
+  to one push per 5s, forced on completion/error), atomic replace per run,
+  failures logged once and never propagated to the pipeline
+- Dev stack: pushgateway service and Prometheus scrape with
+  `honor_labels: true`; Slurm test node auto-resumed after container
+  restart (controller holds it in drain after an unexpected reboot)
 - Grafana dashboard (`grafana/nf-prometheus-dashboard.json`) with run status
   tiles, per-process queue wait / wall time / CPU / peak RSS, task progress
   and a runs table; `run` template variable

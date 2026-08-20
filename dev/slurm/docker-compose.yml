@@ -18,6 +18,11 @@ services:
       # the validation pipeline writes its .prom file here
       - ../../validation:/metrics:ro
 
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    ports:
+      - "9091:9091"
+
   prometheus:
     image: prom/prometheus:v2.53.0
     volumes:

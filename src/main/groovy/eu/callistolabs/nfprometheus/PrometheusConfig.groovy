@@ -49,6 +49,14 @@ class PrometheusConfig implements ConfigScope {
     @Description('Path of the metrics file written in the node_exporter textfile-collector format (default: `nf-prometheus.prom`, relative to the launch directory).')
     String path
 
+    @ConfigOption
+    @Description('Base URL of a Prometheus Pushgateway (e.g. `http://pushgateway.example.org:9091`). When set, metrics are also pushed to the group `job/<pushJob>/run_name/<run name>`. Empty by default (disabled).')
+    String pushgateway
+
+    @ConfigOption
+    @Description('Job name used in the Pushgateway grouping key (default: `nextflow`).')
+    String pushJob
+
     /* no-arg constructor required by the extension point system for config schema discovery */
     PrometheusConfig() {}
 
@@ -56,6 +64,8 @@ class PrometheusConfig implements ConfigScope {
         opts = opts ?: Collections.emptyMap()
         this.enabled = opts.get('enabled') == null ? true : opts.get('enabled') as boolean
         this.path = opts.get('path') as String ?: 'nf-prometheus.prom'
+        this.pushgateway = opts.get('pushgateway') as String
+        this.pushJob = opts.get('pushJob') as String ?: 'nextflow'
     }
 
     boolean isEnabled() {
@@ -64,5 +74,9 @@ class PrometheusConfig implements ConfigScope {
 
     String getPath() {
         return path ?: 'nf-prometheus.prom'
+    }
+
+    String getPushJob() {
+        return pushJob ?: 'nextflow'
     }
 }

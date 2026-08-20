@@ -43,10 +43,16 @@ class PrometheusObserver implements TraceObserver {
     private final PrometheusConfig config
     private final MetricsRegistry registry = new MetricsRegistry()
 
+    /** Minimum interval between two pushes to the gateway during a run. */
+    private static final long PUSH_INTERVAL_MS = 5_000
+
     private Session session
     private String runName
     private long startMillis
     private volatile boolean errored
+
+    private PushgatewayClient pusher
+    private long lastPushMillis
 
     PrometheusObserver(PrometheusConfig config) {
         this.config = config
@@ -69,6 +75,8 @@ class PrometheusObserver implements TraceObserver {
         this.session = session
         this.runName = session.runName ?: 'unknown'
         this.startMillis = System.currentTimeMillis()
+        if( config.pushgateway )
+            this.pusher = new PushgatewayClient(config.pushgateway, config.pushJob, runName)
 
         registry.describe('nf_workflow_info', 'gauge', 'Workflow run information (always 1)')
         registry.describe('nf_workflow_status', 'gauge', 'Workflow status: 0=running 1=complete 2=error')
@@ -126,7 +134,7 @@ class PrometheusObserver implements TraceObserver {
     void onFlowError(TaskHandler handler, TraceRecord trace) {
         errored = true
         registry.set('nf_workflow_status', [run_name: runName], 2d)
-        write()
+        write(true)
     }
 
     @Override
@@ -135,7 +143,7 @@ class PrometheusObserver implements TraceObserver {
         if( !errored )
             registry.set('nf_workflow_status', [run_name: runName], 1d)
         registry.set('nf_workflow_duration_seconds', [run_name: runName], (System.currentTimeMillis() - startMillis) / 1000d)
-        write()
+        write(true)
         log.debug "nf-prometheus: metrics written to ${outputPath()}"
     }
 
@@ -149,22 +157,32 @@ class PrometheusObserver implements TraceObserver {
     }
 
     /**
-     * Atomically (re)write the metrics file: write to a temp file in the
-     * same directory, then rename. This is the contract expected by the
-     * node_exporter textfile collector to avoid partial reads.
+     * Atomically (re)write the metrics file — temp file + rename, the
+     * contract expected by the node_exporter textfile collector — and,
+     * when a Pushgateway is configured, push the same payload (throttled
+     * to one push every {@link #PUSH_INTERVAL_MS} unless {@code force}).
      */
-    protected synchronized void write() {
+    protected synchronized void write(boolean force = false) {
+        final payload = registry.render()
         try {
             final target = outputPath()
             if( target.parent && !Files.exists(target.parent) )
                 Files.createDirectories(target.parent)
             final tmp = target.resolveSibling(target.fileName.toString() + '.tmp')
-            Files.writeString(tmp, registry.render())
+            Files.writeString(tmp, payload)
             Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
         }
         catch( Exception e ) {
             // metrics must never break the pipeline
             log.warn "nf-prometheus: cannot write metrics file: ${e.message}"
+        }
+
+        if( pusher != null ) {
+            final now = System.currentTimeMillis()
+            if( force || now - lastPushMillis >= PUSH_INTERVAL_MS ) {
+                lastPushMillis = now
+                pusher.push(payload)
+            }
         }
     }
 }

@@ -30,6 +30,10 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
+# after a container restart the controller may hold the node in drain/down
+# ("unexpectedly rebooted"): put it back in service
+scontrol update nodename=slurmnode state=resume 2>/dev/null || true
+
 # install the nf-prometheus plugin if the repo build is mounted at /workspace
 PLUGIN_SRC=$(ls -d /workspace/build/plugins/nf-prometheus-* 2>/dev/null | head -1 || true)
 if [ -z "$PLUGIN_SRC" ]; then
