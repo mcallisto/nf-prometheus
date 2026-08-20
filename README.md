@@ -30,6 +30,10 @@ all**.
 
 ## Usage
 
+New to this? Follow the [5-minute setup guide](docs/5-minute-setup.md) —
+from zero to a Grafana dashboard, including the Pushgateway and HTTP
+variants and the HPC-specific notes.
+
 ```groovy
 // nextflow.config
 plugins {
