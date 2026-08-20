@@ -1,0 +1,11 @@
+services:
+  slurm:
+    build: .
+    hostname: slurmnode
+    # test-only: rw cgroup fs for slurmd inside the container
+    privileged: true
+    cgroup: private
+    volumes:
+      - ../..:/workspace
+    working_dir: /workspace/validation
+    command: ["sleep", "infinity"]
