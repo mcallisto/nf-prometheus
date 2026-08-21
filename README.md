@@ -1,5 +1,10 @@
 # nf-prometheus
 
+[![CI](https://github.com/mcallisto/nf-prometheus/actions/workflows/build.yml/badge.svg)](https://github.com/mcallisto/nf-prometheus/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/mcallisto/nf-prometheus)](https://github.com/mcallisto/nf-prometheus/releases)
+[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A525.10-23aa62)](https://www.nextflow.io/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](COPYING)
+
 Prometheus metrics for [Nextflow](https://nextflow.io) pipelines, designed for
 **on-premise HPC clusters** (Slurm, shared filesystems, Apptainer, air-gapped
 environments).
